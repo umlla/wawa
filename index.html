@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>蛙居 · 挂机小院</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --card:rgba(255,255,255,.045);
+  --line:rgba(140,220,170,.14);
+  --green:#7fe0a0;
+  --text:#d6e8db;
+  --muted:#7b9c86;
+  --gold:#ffd479;
+  --red:#ff8f8f;
+}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #1b3527 0%, transparent 70%),
+    radial-gradient(800px 400px at 90% 110%, #123024 0%, transparent 70%),
+    #08110d;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:14px;line-height:1.6;padding:14px;min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.hidden{display:none!important}
+.app{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+
+/* 顶栏 */
+.topbar{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:10px 16px;backdrop-filter:blur(8px);
+  position:sticky;top:8px;z-index:20;
+}
+.stat{display:flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px}
+.stat .ico{font-size:16px}
+.stat.clover{color:var(--green)}
+.stat.weather{color:#a9c9ff}
+.stat.mood{color:#ff9db3}
+.stat.food{color:#9fe0c0;transition:color .4s}
+.stat.food.low{color:var(--gold)}
+.stat.food.empty{color:var(--red);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.stat.lv{color:var(--gold);margin-left:auto}
+
+/* 布局 */
+.grid{display:grid;grid-template-columns:1.05fr 1fr;gap:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:16px;backdrop-filter:blur(8px);
+}
+
+/* 场景 */
+.scene{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:300px;text-align:center;gap:6px;position:relative;overflow:hidden;
+}
+.weather-badge{position:absolute;top:8px;right:14px;font-size:40px;opacity:.18;pointer-events:none}
+.frog{
+  font-size:68px;line-height:1;filter:drop-shadow(0 8px 22px rgba(80,220,140,.28));
+  animation:bob 3s ease-in-out infinite;user-select:none;
+}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.frog.away{animation:walk 1.1s ease-in-out infinite;filter:drop-shadow(0 8px 22px rgba(140,180,255,.3))}
+@keyframes walk{0%,100%{transform:translateX(-7px) rotate(-5deg)}50%{transform:translateX(7px) rotate(5deg)}}
+.frog.hungry{filter:drop-shadow(0 8px 22px rgba(255,140,140,.45)) saturate(.7)}
+.scene-text{font-size:15px;font-weight:600;color:#e8f5ec;margin-top:8px}
+.scene-sub{font-size:12px;color:var(--muted);min-height:19px}
+.scene-sub.warn{color:var(--gold)}
+.scene-sub.danger{color:var(--red)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+
+button{
+  font-family:inherit;font-size:13px;cursor:pointer;
+  background:rgba(120,220,160,.1);border:1px solid rgba(120,220,160,.3);
+  color:#bff0cf;padding:8px 14px;border-radius:10px;transition:.15s;
+}
+button:hover:not(:disabled){background:rgba(120,220,160,.2);transform:translateY(-1px)}
+button:active:not(:disabled){transform:translateY(0)}
+button:disabled{opacity:.28;cursor:not-allowed}
+
+/* 侧栏 */
+.side-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.side-tab{background:none;border:none;color:var(--muted);padding:5px 12px;border-radius:8px;font-size:13px}
+.side-tab:hover{background:rgba(255,255,255,.04);transform:none}
+.side-tab.active{background:rgba(120,220,160,.12);color:var(--green)}
+
+.rate{font-size:12px;color:var(--muted);margin-bottom:10px}
+.rate b{color:var(--green);font-size:16px;font-variant-numeric:tabular-nums}
+.rate .cost{color:var(--red)}
+
+.up-item{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;transition:.15s}
+.up-item:hover{background:rgba(255,255,255,.03)}
+.up-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.up-info{flex:1;min-width:0}
+.up-name{font-size:13px;font-weight:600}
+.up-lv{color:var(--green);font-size:11px;font-weight:400}
+.up-desc{font-size:11px;color:var(--muted)}
+.up-buy{font-size:12px;padding:6px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* 生活面板 */
+#paneLife{max-height:520px;overflow-y:auto;padding-right:4px}
+.life-block{margin-bottom:16px}
+.life-title{font-size:11px;color:var(--muted);letter-spacing:.14em;margin-bottom:7px;font-weight:600}
+
+.food-row{display:flex;gap:6px}
+.food-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;line-height:1.3;
+}
+.food-btn .f-icon{font-size:19px}
+.food-btn .f-name{font-size:11px}
+.food-btn .f-val{font-size:10px;color:var(--green)}
+.food-btn .f-cost{font-size:10px;color:var(--gold);font-variant-numeric:tabular-nums}
+
+.gear-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;transition:.15s}
+.gear-item:hover{background:rgba(255,255,255,.03)}
+.gear-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.gear-info{flex:1;min-width:0}
+.gear-name{font-size:12.5px;font-weight:600}
+.gear-name .tier{font-size:10.5px;color:var(--green);font-weight:400}
+.gear-desc{font-size:11px;color:var(--muted)}
+.gear-btn{font-size:12px;padding:6px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.auto-box{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:11px;
+  background:rgba(120,220,160,.05);border:1px solid rgba(120,220,160,.14);
+}
+.auto-box.on{background:rgba(120,220,160,.11);border-color:rgba(120,220,160,.35)}
+.auto-icon{font-size:19px}
+.auto-info{flex:1;min-width:0}
+.auto-name{font-size:12.5px;font-weight:600}
+.auto-desc{font-size:11px;color:var(--muted)}
+
+/* 行囊 */
+.bag-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px;
+}
+.bag-slot{
+  aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.025);
+  border:1px dashed rgba(140,220,170,.14);
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;transition:.15s;
+}
+.bag-slot.filled{
+  background:rgba(120,220,160,.09);
+  border:1px solid rgba(120,220,160,.3);
+}
+.bag-count{font-size:11px;color:var(--muted);margin-left:6px;font-weight:400;letter-spacing:0}
+
+.item-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;transition:.15s}
+.item-row:hover{background:rgba(255,255,255,.03)}
+.i-icon{font-size:19px;width:26px;text-align:center;flex-shrink:0}
+.i-info{flex:1;min-width:0}
+.i-name{font-size:12.5px;font-weight:600}
+.i-tag{font-size:10.5px;color:var(--muted)}
+.i-buy{font-size:12px;padding:6px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* 底部标签页 */
+.tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.tab{background:none;border:none;color:var(--muted);padding:5px 12px;border-radius:8px;font-size:13px}
+.tab:hover{background:rgba(255,255,255,.04);transform:none}
+.tab.active{background:rgba(120,220,160,.12);color:var(--green)}
+
+#logPane{display:flex;flex-direction:column;gap:3px;max-height:280px;overflow-y:auto}
+.log-item{font-size:12.5px;color:#a8c4b2;display:flex;gap:8px;padding:2px 0}
+.log-time{color:#4e6b59;font-variant-numeric:tabular-nums;flex-shrink:0}
+.log-item.good{color:#9fe8b8}
+.log-item.bad{color:#e8a0a0}
+.log-item.rare{color:var(--gold)}
+.log-item.info{color:#93b3c4}
+
+#albumPane{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;
+  max-height:440px;overflow-y:auto;padding-right:4px;
+}
+.pc{
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015));
+  border:1px solid var(--line);border-radius:12px;padding:10px;
+  display:flex;flex-direction:column;gap:6px;transition:.2s;
+}
+.pc:hover{transform:translateY(-3px);border-color:rgba(140,220,170,.4)}
+.pc.rare{border-color:rgba(150,190,255,.5);box-shadow:0 0 16px rgba(120,170,255,.15)}
+.pc.legend{border-color:rgba(255,212,121,.6);box-shadow:0 0 20px rgba(255,200,90,.22)}
+.pc-top{display:flex;align-items:center;gap:6px}
+.pc-emoji{font-size:22px;line-height:1}
+.pc-place{font-size:12.5px;font-weight:600;color:#e2f2e8}
+.pc-line{font-size:11.5px;color:#93b3a0;line-height:1.55}
+.pc-meta{font-size:10.5px;color:#5f7d6a;margin-top:auto;display:flex;justify-content:space-between}
+.pc-empty{color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:28px}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:rgba(120,220,160,.2);border-radius:3px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="stat clover"><span class="ico">🍀</span><span id="clovers">0</span></div>
+    <div class="stat food" id="foodStat"><span class="ico">🍚</span><span id="food">100</span></div>
+    <div class="stat mood"><span class="ico">💚</span><span id="mood">100</span></div>
+    <div class="stat weather"><span class="ico" id="wicon">☀️</span><span id="wname">晴</span></div>
+    <div class="stat lv">Lv.<span id="level">1</span></div>
+  </header>
+
+  <main class="grid">
+    <section class="card scene">
+      <div class="weather-badge" id="weatherBadge">☀️</div>
+      <div class="frog" id="frog">🐸</div>
+      <div class="scene-text" id="sceneText">小蛙在家，正打着盹。</div>
+      <div class="scene-sub" id="sceneSub"></div>
+      <div class="actions">
+        <button id="btnPat">摸摸它</button>
+        <button id="btnFeed">投喂点心 🍀50</button>
+        <button id="btnTrip">出门旅行</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="side-tabs">
+        <button class="side-tab active" data-pane="facility">🏡 设施</button>
+        <button class="side-tab" data-pane="life">🎒 生活</button>
+      </div>
+
+      <div id="paneFacility">
+        <div class="rate">每秒 <b id="ps">0</b> 🍀<span id="netHint"></span></div>
+        <div id="upgradeList"></div>
+      </div>
+
+      <div id="paneLife" class="hidden">
+        <div class="life-block">
+          <div class="life-title">🍚 投喂 · 饱食度会随时间下降</div>
+          <div class="food-row" id="foodRow"></div>
+        </div>
+        <div class="life-block" id="autoFeedBlock"></div>
+
+        <div class="life-block">
+          <div class="life-title">🎒 行囊 · 出门时会带走<span class="bag-count" id="bagCount"></span></div>
+          <div class="bag-grid" id="bagGrid"></div>
+          <div id="itemShop"></div>
+        </div>
+
+        <div class="life-block">
+          <div class="life-title">🧣 衣食住行 · 永久加成</div>
+          <div id="gearList"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="card">
+    <div class="tabs">
+      <button class="tab active" data-tab="log">日志</button>
+      <button class="tab" data-tab="album">明信片相册 <span id="albumCount">0</span></button>
+    </div>
+    <div id="logPane"></div>
+    <div id="albumPane" class="hidden"></div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   工具
+============================================================ */
+const SAVE_KEY = 'frog_idle_v1';
+const BAG_CAP = 12;
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const rnd = (a,b) => a + Math.random()*(b-a);
+const rndInt = (a,b) => Math.floor(rnd(a, b+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const $ = s => document.querySelector(s);
+
+function fmt(n){
+  const neg = n < 0;
+  n = Math.abs(n);
+  let out;
+  if(n < 1000) out = Math.floor(n).toString();
+  else {
+    const units = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
+    let i = 0;
+    while(n >= 1000 && i < units.length-1){ n /= 1000; i++; }
+    out = n.toFixed(2) + units[i];
+  }
+  return (neg ? '-' : '') + out;
+}
+function fmtDuration(sec){
+  sec = Math.floor(sec);
+  if(sec < 60) return sec + '秒';
+  if(sec < 3600) return Math.floor(sec/60) + '分钟';
+  return (sec/3600).toFixed(1) + '小时';
+}
+function nowStr(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function dateStr(ts){
+  const d = new Date(ts);
+  return (d.getMonth()+1) + '月' + d.getDate() + '日';
+}
+
+/* ============================================================
+   天气
+============================================================ */
+const WEATHERS = {
+  sunny:  { name:'晴',   icon:'☀️', desc:'阳光把叶子晒得暖烘烘的', prodMul:1.25, tripMul:1.0, moodTick:+0.60, weight:26 },
+  cloudy: { name:'多云', icon:'⛅', desc:'云慢吞吞地挪着',         prodMul:1.00, tripMul:1.1, moodTick:+0.15, weight:24 },
+  rainy:  { name:'雨',   icon:'🌧️', desc:'雨点敲着屋檐，草长得快', prodMul:1.50, tripMul:0.7, moodTick:-0.40, weight:16 },
+  windy:  { name:'风',   icon:'🌬️', desc:'风把蒲公英吹得很远',     prodMul:0.90, tripMul:1.7, moodTick: 0.00, weight:12 },
+  foggy:  { name:'雾',   icon:'🌫️', desc:'雾里好像藏着什么',       prodMul:0.85, tripMul:0.6, moodTick:-0.20, weight:10, eventMul:2.2, rareMul:1 },
+  snowy:  { name:'雪',   icon:'❄️', desc:'世界安静得只剩落雪声',   prodMul:0.75, tripMul:0.9, moodTick:-0.30, weight:8,  rareMul:2 },
+  starry: { name:'星夜', icon:'🌙', desc:'星星很亮，适合许愿',     prodMul:1.15, tripMul:1.3, moodTick:+1.00, weight:7 },
+};
+
+const UPGRADES = [
+  { id:'moss',    name:'苔藓地毯', icon:'🟩', base:15,     rate:0.2,  desc:'每秒 +0.2 🍀' },
+  { id:'pond',    name:'后院小池', icon:'💧', base:120,    rate:1.2,  desc:'每秒 +1.2 🍀' },
+  { id:'lantern', name:'南瓜灯笼', icon:'🏮', base:800,    rate:6,    desc:'每秒 +6 🍀' },
+  { id:'garden',  name:'三叶草田', icon:'🍀', base:5000,   rate:35,   desc:'每秒 +35 🍀' },
+  { id:'mill',    name:'风车小屋', icon:'🌀', base:35000,  rate:220,  desc:'每秒 +220 🍀' },
+  { id:'star',    name:'许愿星',   icon:'⭐', base:250000, rate:1500, desc:'每秒 +1500 🍀' },
+];
+
+/* 食物：在家投喂 */
+const FOODS = [
+  { id:'berry', name:'野果',     icon:'🫐', cost:15,  food:15,  mood:0  },
+  { id:'rice',  name:'饭团',     icon:'🍙', cost:60,  food:50,  mood:4  },
+  { id:'cake',  name:'蜂蜜蛋糕', icon:'🍰', cost:280, food:100, mood:14 },
+];
+
+/* 行囊物品：旅行时带走，会在旅途中用掉 / 送人 */
+const ITEMS = [
+  /* 食物 */
+  { id:'riceball', name:'饭团',   icon:'🍙', type:'food', cost:80,  tag:'路上吃',
+    use:['小蛙在路边坐下，吃掉了你准备的饭团，米粒还是温的。',
+         '小蛙把饭团分成两半，一半留着当晚饭。'] },
+  { id:'choco',    name:'巧克力', icon:'🍫', type:'food', cost:150, tag:'路上吃',
+    use:['小蛙掰了一小块你准备的巧克力，甜得眯起了眼睛。',
+         '小蛙把巧克力含在嘴里，慢慢等它化掉。'] },
+  { id:'juice',    name:'果汁',   icon:'🧃', type:'food', cost:120, tag:'路上喝',
+    use:['小蛙喝了一口你准备的果汁，打了个小小的嗝。',
+         '小蛙坐在长椅上慢慢喝果汁，看云飘过去。'] },
+
+  /* 衣物 · 对应天气 */
+  { id:'hat',      name:'草帽',   icon:'👒', type:'cloth', weather:'sunny',  cost:180, tag:'晴天用',
+    use:['太阳很晒，小蛙戴上你准备的草帽，影子变得圆圆的。',
+         '小蛙把草帽压低了一点，眯着眼看远处的光。'] },
+  { id:'jacket',   name:'薄外套', icon:'🧥', type:'cloth', weather:'cloudy', cost:190, tag:'多云穿',
+    use:['风有点凉，小蛙穿上你准备的薄外套，拉链拉到一半。',
+         '小蛙把外套裹紧了些，继续往前走。'] },
+  { id:'umbrella', name:'小雨伞', icon:'☂️', type:'cloth', weather:'rainy',  cost:200, tag:'雨天用',
+    use:['雨下大了，小蛙撑开你准备的小雨伞，听雨点打在伞面上。',
+         '小蛙在伞下躲雨，看水洼里自己的倒影，觉得有点好笑。'] },
+  { id:'windcoat', name:'风衣',   icon:'🧥', type:'cloth', weather:'windy',  cost:210, tag:'风天穿',
+    use:['风很大，小蛙裹紧你准备的风衣，衣角被吹得哗哗响。',
+         '小蛙迎着风走，风衣鼓起来像一对翅膀。'] },
+  { id:'lantern',  name:'小灯笼', icon:'🏮', type:'cloth', weather:'foggy',  cost:250, tag:'雾天用',
+    use:['雾很浓，小蛙点起你准备的小灯笼，光晕在雾里慢慢散开。',
+         '小蛙提着灯笼走，雾里好像有别的影子跟着。'] },
+  { id:'scarf',    name:'围巾',   icon:'🧣', type:'cloth', weather:'snowy',  cost:220, tag:'雪天戴',
+    use:['小蛙围上你准备的围巾，雪落在绒毛上，一会儿就化了。',
+         '小蛙把脸埋进围巾里，呼出的气变成一小团白雾。'] },
+  { id:'starjar',  name:'星愿瓶', icon:'🫙', type:'cloth', weather:'starry', cost:300, tag:'星夜用',
+    use:['夜里，小蛙打开你准备的星愿瓶，里面的光点飘出来，和星星混在一起。',
+         '小蛙对着星愿瓶许了个愿，然后把盖子轻轻拧上。'] },
+
+  /* 礼物 · 送朋友 */
+  { id:'candy',   name:'糖果',   icon:'🍬', type:'gift', cost:100, tag:'送朋友',
+    use:['小蛙把糖果分给路边的麻雀，它们叽叽喳喳地道谢。',
+         '小蛙给了哭鼻子的小蚂蚁一颗糖，它终于笑了。'] },
+  { id:'flower',  name:'小花束', icon:'💐', type:'gift', cost:160, tag:'送朋友',
+    use:['小蛙遇到一只迷路的刺猬，把小花束送给了它。',
+         '小蛙把花送给路边卖唱的小鸟，它唱得更起劲了。'] },
+  { id:'shell',   name:'贝壳',   icon:'🐚', type:'gift', cost:220, tag:'送朋友',
+    use:['小蛙把贝壳送给海边捡垃圾的小螃蟹。',
+         '小蛙遇到一只喜欢收集东西的乌鸦，用贝壳换了一颗玻璃珠。'] },
+  { id:'feather', name:'羽毛笔', icon:'🪶', type:'gift', cost:280, tag:'送朋友',
+    use:['小蛙把羽毛笔送给邮局的老爷爷，他写了一辈子信。',
+         '小蛙把羽毛笔送给一个在路边写生的小女孩。'] },
+];
+
+/* 装备：衣食住行 */
+const GEAR = [
+  {
+    id:'cloth', name:'衣', icon:'🧣',
+    items:[
+      { name:'草叶斗篷',   cost:200,    desc:'心情下降减缓 20%' },
+      { name:'蒲公英外套', cost:3000,   desc:'心情下降减缓 40%，产量 +5%' },
+      { name:'星纹披风',   cost:40000,  desc:'心情下降减缓 60%，产量 +12%' },
+    ]
+  },
+  {
+    id:'food', name:'食', icon:'🍯',
+    items:[
+      { name:'木碗',   cost:300,   desc:'食物效果 +30%' },
+      { name:'陶罐',   cost:4000,  desc:'食物效果 +60%，饱食上限 +20' },
+      { name:'蜜罐',   cost:50000, desc:'食物效果 +100%，饱食上限 +40' },
+    ]
+  },
+  {
+    id:'house', name:'住', icon:'🏠',
+    items:[
+      { name:'苔藓软垫', cost:500,   desc:'产量 +8%' },
+      { name:'小木屋',   cost:6000,  desc:'产量 +20%' },
+      { name:'玻璃温室', cost:80000, desc:'产量 +45%' },
+    ]
+  },
+  {
+    id:'travel', name:'行', icon:'🎒',
+    items:[
+      { name:'布包',     cost:400,   desc:'明信片数量 +30%' },
+      { name:'皮箱',     cost:5000,  desc:'明信片数量 +60%，心情恢复 +5' },
+      { name:'旅行斗篷', cost:70000, desc:'明信片数量 +100%，心情恢复 +10' },
+    ]
+  },
+];
+
+const AUTO_FEEDER_COST = 5000;
+const AUTO_FEEDER_RATE = 0.9;
+const AUTO_FEEDER_FOOD = 0.45;
+const FOOD_TICK = 0.25;
+
+/* ============================================================
+   地点 / 事件
+============================================================ */
+const PLACES = [
+  { name:'青苔石阶',   emoji:'🪨', lines:['石阶上铺满软软的青苔，踩上去一点声音也没有。','你在这里坐了很久，看蚂蚁把一粒米搬回家。'] },
+  { name:'旧书店角落', emoji:'📚', lines:['书页里夹着前一个读者留下的三叶草，已经压干了。','你读到一半就睡着了，醒来时窗外下起了雨。'] },
+  { name:'海边灯塔',   emoji:'🗼', lines:['灯塔的光每十二秒转一圈，你数到第一百圈。','海风把帽子吹走了，你追了很久，最后笑了。'] },
+  { name:'竹林深处',   emoji:'🎋', lines:['竹叶沙沙响，像有人在很远的地方说话。','你捡到一根很直的竹枝，说要带回家。'] },
+  { name:'雪国车站',   emoji:'🚉', lines:['末班车开走了，站台上只剩你和一盏灯。','你在长椅上留下一枚硬币，给下一个赶路的人。'] },
+  { name:'屋顶水塔',   emoji:'🏙️', lines:['从这里能看见整座城市的灯，一盏一盏亮起来。','你把脚悬在边上晃，风从脚趾缝里穿过去。'] },
+  { name:'野花坡',     emoji:'🌼', lines:['坡上开满不知名的小花，你打了一个很长的滚。','你采了一朵最小的，夹在信里带回来。'] },
+  { name:'废弃游乐园', emoji:'🎠', lines:['旋转木马还在转，只是没有音乐了。','你在售票亭里躲雨，发现一本过期的日历。'] },
+  { name:'面包店后巷', emoji:'🥐', lines:['烤箱的味道从后门飘出来，热乎乎的。','老板娘给了你一个刚出炉的边角，你说谢谢。'] },
+  { name:'雾中湖泊',   emoji:'🌊', lines:['雾很厚，看不见对岸，但你听见了水鸟。','你在湖边站了很久，直到雾散了一点点。'] },
+  { name:'老树洞',     emoji:'🌳', lines:['树洞里住着一只松鼠，你们交换了礼物。','你在树洞里睡了一觉，醒来觉得世界很轻。'] },
+  { name:'夜行列车',   emoji:'🚃', lines:['车厢里只有你和打瞌睡的列车员。','窗外掠过的灯一盏都不属于你，但你很喜欢。'] },
+  { name:'山顶邮局',   emoji:'📮', lines:['你在这里寄了一封信，收件人写的是「明年」。','邮戳盖歪了，你说这样才好看。'] },
+  { name:'雨中小摊',   emoji:'🍢', lines:['摊主多给了你一串，说下雨天生意不好。','你蹲在棚子下面，看雨把世界泡软。'] },
+  { name:'图书馆天台', emoji:'🌤️', lines:['云很低，你伸手好像能摸到。','你在这里吹了一下午的风，什么也没做。'] },
+  { name:'萤火虫溪谷', emoji:'✨', lines:['天黑以后，溪边亮起几百个小光点。','你跟着一只萤火虫走了很远，然后它飞走了。'] },
+  { name:'海边旧船',   emoji:'⛵', lines:['船身裂了缝，里面长出一棵小树。','你在船头刻下自己的名字，又把它划掉了。'] },
+  { name:'清晨菜市',   emoji:'🧺', lines:['你买到一颗特别圆的番茄，舍不得吃。','卖菜阿姨说「小青蛙又来啦」，你点点头。'] },
+  { name:'飘雪的温泉', emoji:'♨️', lines:['雪落在水面上就化了，你泡得手指发皱。','你说这是今年最舒服的一个下午。'] },
+  { name:'荒原风车',   emoji:'🌀', lines:['风车转得很慢，像在数什么东西。','你靠着塔身睡着了，梦里也在转。'] },
+];
+
+const TRIP_EVENTS = [
+  '你在路上遇到一只迷路的瓢虫，把它送回了叶子背面。',
+  '你的帽子被风吹走了，追了三条街。',
+  '你在一棵树下打了个盹，梦见自己会飞。',
+  '你和一个背着行囊的蜗牛交换了路线图。',
+  '你在水洼里照见自己，觉得今天还挺好看。',
+  '你捡到一枚生锈的钥匙，不知道能开什么。',
+  '你被一只蝴蝶带路，绕了很远很远。',
+  '你在桥下躲雨，听了一首别人哼的歌。',
+  '你把口袋里的面包分给了三只麻雀。',
+  '你在路边发现一朵开错季节的花。',
+  '你数了数路过的云，一共十七朵。',
+  '你在一扇门前站了很久，最后没有敲。',
+];
+
+const HOME_EVENTS = [
+  { text:'一只蜗牛来敲门，留下一小袋三叶草就走了。', clover:r => r*15 + 20, mood:3 },
+  { text:'蝴蝶从窗口飞进来，绕了两圈又飞出去。',     mood:6 },
+  { text:'你翻旧箱子，找到几枚忘了花的硬币。',       clover:r => r*25 + 50 },
+  { text:'屋檐漏了一点雨，打湿了地毯。',             clover:r => -(r*10 + 10), mood:-3 },
+  { text:'邻居送来一盘点心，还是热的。',             mood:10, food:18 },
+  { text:'你在草丛里睡了一觉，醒来天已经黑了。',     mood:8 },
+  { text:'一只蚂蚁搬走了你掉的一粒糖。',             mood:2 },
+  { text:'你在门口捡到一张别人掉的明信片。',         postcard:true },
+];
+
+/* ============================================================
+   状态
+============================================================ */
+function defaultState(){
+  return {
+    clovers: 0,
+    totalClovers: 0,
+    mood: 100,
+    food: 100,
+    level: 1,
+    weather: 'sunny',
+    weatherTimer: 120,
+    perSecond: 0,
+    autoCost: 0,
+    upgrades: {},
+    gear: { cloth:0, food:0, house:0, travel:0 },
+    hasAutoFeeder: false,
+    autoFeed: false,
+    bag: [],
+    postcards: [],
+    logs: [],
+    logSeq: 0,
+    pcSeq: 0,
+    eventTimer: 30,
+    frog: { home:true, remain:0, duration:0, place:null, events:[], autoTimer:45, eventTimer:0, bag:[] },
+    stats: { trips:0, events:0, fed:0 },
+    lastSave: Date.now()
+  };
+}
+let state = defaultState();
+let lastTick = performance.now();
+let saveTimer = 10;
+let patCd = 0;
+let lastLogSeq = -1, lastPcSeq = -1;
+
+/* ============================================================
+   派生数值
+============================================================ */
+function foodMax(){
+  return [100, 100, 120, 140][state.gear.food] || 100;
+}
+function foodMul(){
+  return [1, 1.3, 1.6, 2.0][state.gear.food] || 1;
+}
+function houseMul(){
+  return [1, 1.08, 1.20, 1.45][state.gear.house] || 1;
+}
+function clothMul(){
+  return [1, 1, 1.05, 1.12][state.gear.cloth] || 1;
+}
+function clothReduce(){
+  return [1, 0.8, 0.6, 0.4][state.gear.cloth] || 1;
+}
+function postcardMul(){
+  return [1, 1.3, 1.6, 2.0][state.gear.travel] || 1;
+}
+
+function computePerSecond(){
+  let base = 1;
+  for(const u of UPGRADES) base += (state.upgrades[u.id] || 0) * u.rate;
+  const w = WEATHERS[state.weather] || WEATHERS.sunny;
+  const moodMul = 0.55 + (state.mood / 100) * 0.85;
+
+  let foodMul2 = 1;
+  if(state.food <= 0) foodMul2 = 0.35;
+  else if(state.food < 30) foodMul2 = 0.7;
+
+  return base * w.prodMul * moodMul * houseMul() * clothMul() * foodMul2;
+}
+function autoCostPerSec(){
+  return (state.hasAutoFeeder && state.autoFeed && state.frog.home && state.food < foodMax())
+    ? AUTO_FEEDER_RATE : 0;
+}
+function upgradeCost(u){
+  const n = state.upgrades[u.id] || 0;
+  return Math.floor(u.base * Math.pow(1.18, n));
+}
+
+/* ============================================================
+   日志
+============================================================ */
+function addLog(text, type){
+  state.logs.unshift({ time: nowStr(), text, type: type || '' });
+  if(state.logs.length > 80) state.logs.length = 80;
+  state.logSeq++;
+}
+
+/* ============================================================
+   天气
+============================================================ */
+function changeWeather(){
+  const keys = Object.keys(WEATHERS).filter(k => k !== state.weather);
+  let total = 0;
+  for(const k of keys) total += WEATHERS[k].weight;
+  let r = Math.random() * total;
+  for(const k of keys){
+    r -= WEATHERS[k].weight;
+    if(r <= 0){ state.weather = k; break; }
+  }
+  state.weatherTimer = rnd(90, 240);
+  const w = WEATHERS[state.weather];
+  addLog(`天气变成了「${w.name}」。${w.desc}。`, 'info');
+}
+
+/* ============================================================
+   旅行
+============================================================ */
+/* 下一次旅行事件的时间间隔：
+   最短 5 分钟（300 秒），平均 25 分钟（指数分布均值 1200 + 300），
+   最长被截断到 45 分钟（300 + 2400）。
+   不告诉玩家具体多久，让它自然发生。 */
+function nextTripEventDelay(){
+  const exp = -Math.log(1 - Math.random()) * 1200;
+  return 300 + Math.min(exp, 2400);
+}
+
+/* 旅行时长：最短 10 分钟，最长 2 小时，随机 */
+function rollTripDuration(){
+  return rnd(600, 7200);
+}
+
+function startTrip(){
+  const f = state.frog;
+  if(!f.home) return;
+  const place = pick(PLACES);
+  const dur = rollTripDuration();
+
+  f.home = false;
+  f.place = place;
+  f.duration = dur;
+  f.remain = dur;
+  f.events = [];
+  f.eventTimer = nextTripEventDelay();
+  f.bag = state.bag.slice();   // 带走行囊
+  state.bag = [];
+
+  addLog(`小蛙背上行囊，往「${place.name}」去了。`, 'info');
+  if(f.bag.length){
+    addLog('它带走了：' + f.bag.map(i => i.icon + i.name).join('、') + '。', 'info');
+  }
+}
+
+/* 旅行中的一次事件：优先用掉玩家准备的东西 */
+function tripEvent(){
+  const f = state.frog;
+  if(!f.bag || !f.bag.length){
+    const e = pick(TRIP_EVENTS);
+    if(!f.events.includes(e) && f.events.length < 6) f.events.push(e);
+    addLog('旅途中：' + e, 'info');
+    return;
+  }
+
+  const w = state.weather;
+  const bag = f.bag;
+
+  /* 权重池：当前天气对应的衣物最容易用上，食物次之，礼物再次 */
+  const pool = [];
+  for(const it of bag){
+    if(it.type === 'cloth' && it.weather === w){ pool.push(it, it, it); }
+    else if(it.type === 'food'){ pool.push(it, it); }
+    else if(it.type === 'gift'){ pool.push(it); }
+    else { pool.push(it); }
+  }
+  const item = pick(pool);
+  const idx = bag.indexOf(item);
+  if(idx >= 0) bag.splice(idx, 1);
+
+  const text = pick(item.use);
+  const type = item.type === 'gift' ? 'good' : 'good';
+  addLog('旅途中：' + text, type);
+}
+
+function endTrip(){
+  const f = state.frog;
+  if(f.home) return;
+
+  const place = f.place;
+  const dur = f.duration;
+
+  let n = rndInt(1, 2) + (Math.random() < 0.35 ? 1 : 0);
+  n = Math.max(1, Math.round(n * postcardMul()));
+  for(let i = 0; i < n; i++){
+    state.postcards.unshift(makePostcard());
+    state.pcSeq++;
+  }
+  if(state.postcards.length > 200) state.postcards.length = 200;
+
+  const reward = state.perSecond * dur * 0.8 + 40 * state.level;
+  state.clovers += reward;
+  state.totalClovers += reward;
+
+  /* 衣物加成：心情恢复 */
+  const moodBack = [18, 18, 23, 28][state.gear.travel] || 18;
+  state.mood = clamp(state.mood + moodBack, 0, 100);
+  state.stats.trips++;
+
+  addLog(`小蛙从「${place.name}」回来了，带回 ${n} 张明信片和 ${fmt(reward)} 🍀。`, 'good');
+
+  /* 剩余行囊物品放回 */
+  if(f.bag && f.bag.length){
+    let back = 0;
+    for(const item of f.bag){
+      if(state.bag.length < BAG_CAP){ state.bag.push(item); back++; }
+    }
+    if(back > 0) addLog(`小蛙把没用完的 ${back} 件东西放回了行囊。`, 'info');
+  }
+
+  f.home = true;
+  f.remain = 0;
+  f.place = null;
+  f.events = [];
+  f.bag = [];
+  f.autoTimer = rnd(60, 150);
+}
+
+function makePostcard(){
+  const p = pick(PLACES);
+  const w = WEATHERS[state.weather];
+  let rarity = 'common';
+  const roll = Math.random() / (1 + (w.rareMul || 0) * 0.6);
+  if(roll < 0.025) rarity = 'legend';
+  else if(roll < 0.14) rarity = 'rare';
+
+  return {
+    id: 'pc' + Date.now() + Math.random().toString(36).slice(2,7),
+    place: p.name,
+    emoji: p.emoji,
+    line: pick(p.lines),
+    weather: state.weather,
+    date: Date.now(),
+    rarity
+  };
+}
+
+/* ============================================================
+   随机事件
+============================================================ */
+function homeEvent(){
+  const e = pick(HOME_EVENTS);
+  const r = state.perSecond;
+  const parts = [];
+  let bad = false;
+
+  if(e.clover){
+    const v = Math.floor(e.clover(r));
+    state.clovers = Math.max(0, state.clovers + v);
+    if(v > 0){ state.totalClovers += v; parts.push('+' + fmt(v) + ' 🍀'); }
+    else { bad = true; parts.push(fmt(v) + ' 🍀'); }
+  }
+  if(e.mood){
+    state.mood = clamp(state.mood + e.mood, 0, 100);
+    parts.push((e.mood > 0 ? '+' : '') + e.mood + ' 心情');
+  }
+  if(e.food){
+    const max = foodMax();
+    state.food = clamp(state.food + e.food * foodMul(), 0, max);
+    parts.push('+' + Math.round(e.food * foodMul()) + ' 饱食');
+  }
+  if(e.postcard){
+    state.postcards.unshift(makePostcard());
+    state.pcSeq++;
+    parts.push('获得一张明信片');
+  }
+
+  addLog(e.text + (parts.length ? `（${parts.join('，')}）` : ''), bad ? 'bad' : 'good');
+  state.stats.events++;
+}
+
+/* ============================================================
+   主循环
+============================================================ */
+function tick(dt){
+  state.perSecond = computePerSecond();
+  const autoCost = autoCostPerSec();
+  state.autoCost = autoCost;
+
+  state.clovers += (state.perSecond - autoCost) * dt;
+  if(state.perSecond > 0) state.totalClovers += state.perSecond * dt;
+  if(state.clovers < 0) state.clovers = 0;
+
+  if(autoCost > 0){
+    const max = foodMax();
+    state.food = Math.min(max, state.food + AUTO_FEEDER_FOOD * dt);
+  }
+
+  /* 在家才会饿；出门在外小蛙自己找吃的 */
+  if(state.frog.home){
+    state.food = Math.max(0, state.food - FOOD_TICK * dt);
+  }
+
+  const w = WEATHERS[state.weather];
+  let moodTick = w.moodTick;
+  if(moodTick < 0) moodTick *= clothReduce();
+  if(state.frog.home){
+    if(state.food <= 0) moodTick -= 1.6;
+    else if(state.food < 30) moodTick -= 0.5;
+  }
+  state.mood = clamp(state.mood + moodTick * dt, 0, 100);
+
+  state.weatherTimer -= dt;
+  if(state.weatherTimer <= 0) changeWeather();
+
+  tickFrog(dt);
+
+  state.eventTimer -= dt;
+  if(state.eventTimer <= 0){
+    state.eventTimer = rnd(25, 60) / (w.eventMul || 1);
+    if(Math.random() < 0.7 && state.frog.home) homeEvent();
+  }
+
+  const newLv = 1 + Math.floor(Math.sqrt(state.totalClovers / 60));
+  if(newLv > state.level){
+    state.level = newLv;
+    addLog(`小院成长到了 Lv.${newLv}！`, 'good');
+  }
+
+  if(patCd > 0) patCd -= dt;
+
+  saveTimer -= dt;
+  if(saveTimer <= 0){ saveTimer = 10; save(); }
+}
+
+function tickFrog(dt){
+  const f = state.frog;
+  if(f.home){
+    f.autoTimer -= dt;
+    if(f.autoTimer <= 0){
+      f.autoTimer = rnd(50, 130);
+      if(state.mood > 35 && state.food > 25) startTrip();
+    }
+  } else {
+    f.remain -= dt;
+    f.eventTimer -= dt;
+    if(f.eventTimer <= 0){
+      f.eventTimer = nextTripEventDelay();
+      tripEvent();
+    }
+    if(f.remain <= 0) endTrip();
+  }
+}
+
+function loop(){
+  const now = performance.now();
+  let dt = (now - lastTick) / 1000;
+  lastTick = now;
+  if(dt > 5) dt = 5;
+  tick(dt);
+  render();
+}
+
+/* ============================================================
+   操作
+============================================================ */
+function buy(id){
+  const u = UPGRADES.find(x => x.id === id);
+  if(!u) return;
+  const cost = upgradeCost(u);
+  if(state.clovers < cost) return;
+  state.clovers -= cost;
+  state.upgrades[id] = (state.upgrades[id] || 0) + 1;
+  state.perSecond = computePerSecond();
+  addLog('升级了「' + u.name + '」到 Lv.' + state.upgrades[id] + '。', 'good');
+}
+
+function eat(foodId){
+  const f = FOODS.find(x => x.id === foodId);
+  if(!f) return;
+  if(!state.frog.home) return;
+  const max = foodMax();
+  if(state.food >= max - 0.01) return;
+  if(state.clovers < f.cost) return;
+
+  state.clovers -= f.cost;
+  const gain = f.food * foodMul();
+  state.food = clamp(state.food + gain, 0, max);
+  if(f.mood) state.mood = clamp(state.mood + f.mood, 0, 100);
+  state.stats.fed++;
+
+  let msg = `你喂了小蛙一份${f.name}，饱食度 +${Math.round(gain)}。`;
+  if(f.mood) msg += ` 心情 +${f.mood}。`;
+  addLog(msg, 'good');
+}
+
+function buyItem(id){
+  const item = ITEMS.find(i => i.id === id);
+  if(!item) return;
+  if(state.bag.length >= BAG_CAP) return;
+  if(state.clovers < item.cost) return;
+  state.clovers -= item.cost;
+  state.bag.push({
+    id: item.id, name: item.name, icon: item.icon,
+    type: item.type, weather: item.weather, use: item.use
+  });
+  addLog(`你把${item.icon}${item.name}放进了行囊。`, 'info');
+}
+
+function buyGear(gearId){
+  const g = GEAR.find(x => x.id === gearId);
+  if(!g) return;
+  const lv = state.gear[gearId] || 0;
+  if(lv >= g.items.length) return;
+  const item = g.items[lv];
+  if(state.clovers < item.cost) return;
+
+  state.clovers -= item.cost;
+  state.gear[gearId] = lv + 1;
+  addLog(`置办了「${item.name}」（${g.name}）。${item.desc}。`, 'good');
+}
+
+function buyAutoFeeder(){
+  if(state.hasAutoFeeder) return;
+  if(state.clovers < AUTO_FEEDER_COST) return;
+  state.clovers -= AUTO_FEEDER_COST;
+  state.hasAutoFeeder = true;
+  state.autoFeed = true;
+  addLog('你装好了自动喂食器。它会持续消耗三叶草，维持小蛙的饱食度。', 'good');
+}
+
+function toggleAutoFeed(){
+  if(!state.hasAutoFeeder) return;
+  state.autoFeed = !state.autoFeed;
+  addLog('自动喂食器已' + (state.autoFeed ? '开启' : '关闭') + '。', 'info');
+}
+
+/* ============================================================
+   渲染
+============================================================ */
+function render(){
+  const foodMaxV = foodMax();
+  $('#clovers').textContent = fmt(state.clovers);
+  $('#ps').textContent = fmt(state.perSecond);
+  $('#mood').textContent = Math.round(state.mood);
+  $('#level').textContent = state.level;
+
+  const foodEl = $('#food');
+  foodEl.textContent = Math.round(state.food) + '/' + foodMaxV;
+  const fStat = $('#foodStat');
+  fStat.classList.remove('low','empty');
+  if(state.food <= 0.5) fStat.classList.add('empty');
+  else if(state.food < 30) fStat.classList.add('low');
+
+  const w = WEATHERS[state.weather];
+  $('#wicon').textContent = w.icon;
+  $('#wname').textContent = w.name;
+  $('#weatherBadge').textContent = w.icon;
+
+  const cost = state.autoCost;
+  $('#netHint').innerHTML = cost > 0
+    ? ` <span class="cost">(-${fmt(cost)} 喂食)</span>`
+    : '';
+
+  renderScene();
+  updateShop();
+  updateLife();
+  updateBag();
+
+  if(state.logSeq !== lastLogSeq){ lastLogSeq = state.logSeq; renderLogs(); }
+  if(state.pcSeq !== lastPcSeq){ lastPcSeq = state.pcSeq; renderAlbum(); }
+
+  const away = !state.frog.home;
+  $('#btnPat').disabled = away || patCd > 0;
+  $('#btnFeed').disabled = away || state.clovers < 50 || state.mood >= 100;
+  $('#btnTrip').disabled = !state.frog.home;
+}
+
+function renderScene(){
+  const f = state.frog;
+  const el = $('#frog');
+  const w = WEATHERS[state.weather];
+  const sub = $('#sceneSub');
+  sub.classList.remove('warn','danger');
+  el.classList.remove('hungry');
+
+  if(f.home){
+    el.textContent = '🐸';
+    el.classList.remove('away');
+    $('#sceneText').textContent = '小蛙在家，正打着盹。';
+    if(state.food <= 0.5){
+      sub.textContent = '小蛙饿得没力气了……';
+      sub.classList.add('danger');
+      el.classList.add('hungry');
+    } else if(state.food < 30){
+      sub.textContent = '小蛙肚子咕咕叫，产出也变慢了。';
+      sub.classList.add('warn');
+      el.classList.add('hungry');
+    } else {
+      sub.textContent = w.name + ' · ' + w.desc;
+    }
+  } else {
+    el.textContent = '🎒';
+    el.classList.add('away');
+    $('#sceneText').textContent = '小蛙去了「' + f.place.name + '」';
+    const n = f.bag ? f.bag.length : 0;
+    sub.textContent = n > 0
+      ? '不知道什么时候回来…… 行囊里还有 ' + n + ' 件东西'
+      : '不知道什么时候回来……';
+  }
+}
+
+/* --- 设施列表 --- */
+function buildShop(){
+  const list = $('#upgradeList');
+  list.innerHTML = '';
+  for(const u of UPGRADES){
+    const el = document.createElement('div');
+    el.className = 'up-item';
+    el.innerHTML =
+      '<div class="up-icon">' + u.icon + '</div>' +
+      '<div class="up-info">' +
+        '<div class="up-name">' + u.name + ' <span class="up-lv">Lv.0</span></div>' +
+        '<div class="up-desc">' + u.desc + '</div>' +
+      '</div>' +
+      '<button class="up-buy">🍀 <span>0</span></button>';
+    el.querySelector('.up-buy').addEventListener('click', () => buy(u.id));
+    list.appendChild(el);
+    u._el = el;
+  }
+}
+function updateShop(){
+  for(const u of UPGRADES){
+    if(!u._el) continue;
+    const n = state.upgrades[u.id] || 0;
+    const cost = upgradeCost(u);
+    u._el.querySelector('.up-lv').textContent = 'Lv.' + n;
+    const btn = u._el.querySelector('.up-buy');
+    btn.querySelector('span').textContent = fmt(cost);
+    btn.disabled = state.clovers < cost;
+  }
+}
+
+/* --- 生活面板 --- */
+function buildLife(){
+  /* 食物 */
+  const row = $('#foodRow');
+  row.innerHTML = '';
+  for(const f of FOODS){
+    const btn = document.createElement('button');
+    btn.className = 'food-btn';
+    btn.innerHTML =
+      '<span class="f-icon">' + f.icon + '</span>' +
+      '<span class="f-name">' + f.name + '</span>' +
+      '<span class="f-val">+' + f.food + ' 饱食</span>' +
+      '<span class="f-cost">🍀 ' + f.cost + '</span>';
+    btn.addEventListener('click', () => eat(f.id));
+    row.appendChild(btn);
+    f._el = btn;
+  }
+
+  /* 自动喂食器 */
+  const ab = $('#autoFeedBlock');
+  ab.innerHTML =
+    '<div class="life-title">⚙️ 自动喂食</div>' +
+    '<div class="auto-box" id="autoBox">' +
+      '<div class="auto-icon">🤖</div>' +
+      '<div class="auto-info">' +
+        '<div class="auto-name" id="autoName">自动喂食器</div>' +
+        '<div class="auto-desc" id="autoDesc"></div>' +
+      '</div>' +
+      '<button id="autoBtn"></button>' +
+    '</div>';
+  $('#autoBtn').addEventListener('click', () => {
+    if(!state.hasAutoFeeder) buyAutoFeeder();
+    else toggleAutoFeed();
+  });
+
+  /* 物品商店 */
+  const shop = $('#itemShop');
+  shop.innerHTML = '';
+  for(const item of ITEMS){
+    const el = document.createElement('div');
+    el.className = 'item-row';
+    el.innerHTML =
+      '<span class="i-icon">' + item.icon + '</span>' +
+      '<div class="i-info">' +
+        '<div class="i-name">' + item.name + '</div>' +
+        '<div class="i-tag">' + item.tag + '</div>' +
+      '</div>' +
+      '<button class="i-buy">🍀 ' + item.cost + '</button>';
+    el.querySelector('.i-buy').addEventListener('click', () => buyItem(item.id));
+    shop.appendChild(el);
+    item._el = el;
+  }
+
+  /* 装备 */
+  const gl = $('#gearList');
+  gl.innerHTML = '';
+  for(const g of GEAR){
+    const el = document.createElement('div');
+    el.className = 'gear-item';
+    el.innerHTML =
+      '<div class="gear-icon">' + g.icon + '</div>' +
+      '<div class="gear-info">' +
+        '<div class="gear-name"><span class="g-title"></span></div>' +
+        '<div class="gear-desc"></div>' +
+      '</div>' +
+      '<button class="gear-btn"></button>';
+    el.querySelector('.gear-btn').addEventListener('click', () => buyGear(g.id));
+    gl.appendChild(el);
+    g._el = el;
+  }
+}
+
+function updateLife(){
+  const max = foodMax();
+
+  /* 食物按钮：出门时禁用 */
+  for(const f of FOODS){
+    if(!f._el) continue;
+    const full = state.food >= max - 0.01;
+    f._el.disabled = !state.frog.home || full || state.clovers < f.cost;
+    f._el.querySelector('.f-val').textContent = '+' + Math.round(f.food * foodMul()) + ' 饱食';
+    f._el.querySelector('.f-cost').textContent = '🍀 ' + f.cost;
+  }
+
+  /* 自动喂食器 */
+  const box = $('#autoBox');
+  const btn = $('#autoBtn');
+  const nameEl = $('#autoName');
+  const descEl = $('#autoDesc');
+  if(box){
+    box.classList.toggle('on', state.hasAutoFeeder && state.autoFeed);
+    if(!state.hasAutoFeeder){
+      nameEl.textContent = '自动喂食器';
+      descEl.textContent = `在家时每秒消耗 ${AUTO_FEEDER_RATE} 🍀，自动补充饱食度`;
+      btn.textContent = '🍀 ' + fmt(AUTO_FEEDER_COST);
+      btn.disabled = state.clovers < AUTO_FEEDER_COST;
+    } else {
+      nameEl.textContent = '自动喂食器 · 已安装';
+      if(state.autoFeed){
+        descEl.textContent = state.frog.home
+          ? `运行中：-${AUTO_FEEDER_RATE} 🍀/秒 → +${AUTO_FEEDER_FOOD} 饱食/秒`
+          : '小蛙出门了，喂食器暂停工作';
+      } else {
+        descEl.textContent = '已关闭，不再消耗三叶草';
+      }
+      btn.textContent = state.autoFeed ? '关闭' : '开启';
+      btn.disabled = false;
+    }
+  }
+
+  /* 装备 */
+  for(const g of GEAR){
+    if(!g._el) continue;
+    const lv = state.gear[g.id] || 0;
+    const titleEl = g._el.querySelector('.g-title');
+    const descEl2 = g._el.querySelector('.gear-desc');
+    const btn2 = g._el.querySelector('.gear-btn');
+
+    if(lv > 0){
+      titleEl.innerHTML = g.items[lv-1].name + ' <span class="tier">Lv.' + lv + '</span>';
+    } else {
+      titleEl.textContent = g.name + ' · 尚未置办';
+    }
+
+    if(lv >= g.items.length){
+      descEl2.textContent = '已满级';
+      btn2.textContent = '已满级';
+      btn2.disabled = true;
+    } else {
+      const next = g.items[lv];
+      descEl2.textContent = '下一件：' + next.name + ' — ' + next.desc;
+      btn2.textContent = '🍀 ' + fmt(next.cost);
+      btn2.disabled = state.clovers < next.cost;
+    }
+  }
+}
+
+/* --- 行囊 --- */
+function updateBag(){
+  const grid = $('#bagGrid');
+  const cells = [];
+  for(let i = 0; i < BAG_CAP; i++){
+    const item = state.bag[i];
+    if(item){
+      cells.push('<div class="bag-slot filled" title="' + item.name + '">' + item.icon + '</div>');
+    } else {
+      cells.push('<div class="bag-slot"></div>');
+    }
+  }
+  grid.innerHTML = cells.join('');
+  $('#bagCount').textContent = ` (${state.bag.length}/${BAG_CAP})`;
+
+  const full = state.bag.length >= BAG_CAP;
+  for(const item of ITEMS){
+    if(!item._el) continue;
+    const btn = item._el.querySelector('.i-buy');
+    btn.disabled = full || state.clovers < item.cost;
+  }
+}
+
+/* --- 日志 / 相册 --- */
+function renderLogs(){
+  const pane = $('#logPane');
+  if(!state.logs.length){
+    pane.innerHTML = '<div class="pc-empty">还没有什么发生。</div>';
+    return;
+  }
+  pane.innerHTML = state.logs.map(l =>
+    '<div class="log-item ' + (l.type || '') + '">' +
+      '<span class="log-time">' + l.time + '</span>' +
+      '<span>' + l.text + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+function renderAlbum(){
+  const pane = $('#albumPane');
+  $('#albumCount').textContent = state.postcards.length;
+  if(!state.postcards.length){
+    pane.innerHTML = '<div class="pc-empty">相册还是空的。让小蛙出门走走吧。</div>';
+    return;
+  }
+  pane.innerHTML = state.postcards.map(p => {
+    const w = WEATHERS[p.weather] || WEATHERS.sunny;
+    return '<div class="pc ' + p.rarity + '">' +
+      '<div class="pc-top"><span class="pc-emoji">' + p.emoji + '</span>' +
+      '<span class="pc-place">' + p.place + '</span></div>' +
+      '<div class="pc-line">' + p.line + '</div>' +
+      '<div class="pc-meta"><span>' + w.icon + w.name + '</span><span>' + dateStr(p.date) + '</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ============================================================
+   存档
+============================================================ */
+function save(){
+  state.lastSave = Date.now();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e){}
+}
+
+function load(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    state = Object.assign(defaultState(), data);
+    state.frog = Object.assign(defaultState().frog, data.frog || {});
+    state.gear = Object.assign({ cloth:0, food:0, house:0, travel:0 }, data.gear || {});
+    state.stats = Object.assign({ trips:0, events:0, fed:0 }, data.stats || {});
+    if(typeof state.food !== 'number') state.food = 100;
+    if(typeof state.hasAutoFeeder !== 'boolean') state.hasAutoFeeder = false;
+    if(typeof state.autoFeed !== 'boolean') state.autoFeed = false;
+    if(!Array.isArray(state.bag)) state.bag = [];
+    if(!Array.isArray(state.logs)) state.logs = [];
+    if(!Array.isArray(state.postcards)) state.postcards = [];
+    if(!Array.isArray(state.frog.bag)) state.frog.bag = [];
+    return true;
+  } catch(e){
+    state = defaultState();
+    return false;
+  }
+}
+
+function applyOffline(){
+  const now = Date.now();
+  const dt = (now - (state.lastSave || now)) / 1000;
+  if(dt < 60) return;
+
+  const capped = Math.min(dt, 8 * 3600);
+  const gain = state.perSecond * capped * 0.5;
+  state.clovers += gain;
+  state.totalClovers += gain;
+
+  if(state.frog.home){
+    if(!(state.hasAutoFeeder && state.autoFeed)){
+      state.food = Math.max(20, state.food - FOOD_TICK * capped * 0.35);
+    }
+  } else {
+    state.frog.remain -= dt;
+    if(state.frog.remain <= 0) endTrip();
+  }
+
+  addLog('你离开了 ' + fmtDuration(dt) + '，小院自己长了 ' + fmt(gain) + ' 🍀。', 'good');
+}
+
+/* ============================================================
+   初始化
+============================================================ */
+function bindUI(){
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      $('#logPane').classList.toggle('hidden', tab !== 'log');
+      $('#albumPane').classList.toggle('hidden', tab !== 'album');
+    });
+  });
+
+  document.querySelectorAll('.side-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.side-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const pane = t.dataset.pane;
+      $('#paneFacility').classList.toggle('hidden', pane !== 'facility');
+      $('#paneLife').classList.toggle('hidden', pane !== 'life');
+    });
+  });
+
+  $('#btnPat').addEventListener('click', () => {
+    if(!state.frog.home || patCd > 0) return;
+    patCd = 3;
+    state.mood = clamp(state.mood + 5, 0, 100);
+    addLog('你摸了摸小蛙的头，它没有躲。', 'good');
+  });
+
+  $('#btnFeed').addEventListener('click', () => {
+    if(!state.frog.home) return;
+    if(state.clovers < 50 || state.mood >= 100) return;
+    state.clovers -= 50;
+    state.mood = clamp(state.mood + 18, 0, 100);
+    addLog('你喂了小蛙一块点心，它眯起了眼睛。', 'good');
+  });
+
+  $('#btnTrip').addEventListener('click', () => {
+    if(!state.frog.home) return;
+    startTrip();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden) save();
+    else lastTick = performance.now();
+  });
+  window.addEventListener('beforeunload', save);
+}
+
+function init(){
+  const isNew = !load();
+
+  for(const u of UPGRADES){
+    if(state.upgrades[u.id] == null) state.upgrades[u.id] = 0;
+  }
+  if(!state.logSeq) state.logSeq = state.logs.length;
+  if(!state.pcSeq) state.pcSeq = state.postcards.length;
+  state.food = clamp(state.food, 0, foodMax());
+
+  state.perSecond = computePerSecond();
+  applyOffline();
+
+  buildShop();
+  buildLife();
+  bindUI();
+
+  if(isNew){
+    addLog('欢迎来到蛙居。小院会自己长出三叶草，小蛙会出门旅行。', 'good');
+    addLog('记得给它准备行囊——出门在外，不知道什么时候回来。', 'info');
+  } else {
+    addLog('小蛙抬起头看了你一眼。', 'info');
+  }
+
+  lastTick = performance.now();
+  render();
+  setInterval(loop, 200);
+}
+
+init();
+</script>
+</body>
+</html>
