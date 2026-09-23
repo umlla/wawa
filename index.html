@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐸%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍀%3C/text%3E%3C/svg%3E">
 <title>蛙居小院</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -270,7 +270,7 @@ button:disabled{opacity:.28;cursor:not-allowed}
    版本控制 / 存档键
 ============================================================ */
 const SAVE_KEY       = 'frog_idle_v6';
-const SAVE_VERSION   = 7;
+const SAVE_VERSION   = 8;
 const LEGACY_KEYS    = ['frog_idle_v5', 'frog_idle_v4', 'frog_idle_v3', 'frog_idle_v2', 'frog_idle_v1'];
 
 /* ============================================================
@@ -364,47 +364,48 @@ const FOODS = [
   { id:'cake',  name:'蜂蜜蛋糕', icon:'🍰', cost:800, food:100, mood:14 },
 ];
 
+/* 行囊物品：加上 effect 字段，真正回复数值 */
 const ITEMS = [
-  { id:'riceball', name:'饭团',   icon:'🍙', type:'food', cost:250, tag:'路上吃',
+  { id:'riceball', name:'饭团',   icon:'🍙', type:'food', cost:250, tag:'路上吃', effect:{food:35},
     use:['小蛙在路边坐下，吃掉了你准备的饭团，米粒还是温的。',
          '小蛙把饭团分成两半，一半留着当晚饭。'] },
-  { id:'choco',    name:'巧克力', icon:'🍫', type:'food', cost:450, tag:'路上吃',
+  { id:'choco',    name:'巧克力', icon:'🍫', type:'food', cost:450, tag:'路上吃', effect:{food:25, mood:8},
     use:['小蛙掰了一小块你准备的巧克力，甜得眯起了眼睛。',
          '小蛙把巧克力含在嘴里，慢慢等它化掉。'] },
-  { id:'juice',    name:'果汁',   icon:'🧃', type:'food', cost:400, tag:'路上喝',
+  { id:'juice',    name:'果汁',   icon:'🧃', type:'food', cost:400, tag:'路上喝', effect:{food:30},
     use:['小蛙喝了一口你准备的果汁，打了个小小的嗝。',
          '小蛙坐在长椅上慢慢喝果汁，看云飘过去。'] },
-  { id:'hat',      name:'草帽',   icon:'👒', type:'cloth', weather:'sunny',  cost:550, tag:'晴天用',
+  { id:'hat',      name:'草帽',   icon:'👒', type:'cloth', weather:'sunny',  cost:550, tag:'晴天用', effect:{mood:6},
     use:['太阳很晒，小蛙戴上你准备的草帽，影子变得圆圆的。',
          '小蛙把草帽压低了一点，眯着眼看远处的光。'] },
-  { id:'jacket',   name:'薄外套', icon:'🧥', type:'cloth', weather:'cloudy', cost:600, tag:'多云穿',
+  { id:'jacket',   name:'薄外套', icon:'🧥', type:'cloth', weather:'cloudy', cost:600, tag:'多云穿', effect:{mood:5},
     use:['风有点凉，小蛙穿上你准备的薄外套，拉链拉到一半。',
          '小蛙把外套裹紧了些，继续往前走。'] },
-  { id:'umbrella', name:'小雨伞', icon:'☂️', type:'cloth', weather:'rainy',  cost:620, tag:'雨天用',
+  { id:'umbrella', name:'小雨伞', icon:'☂️', type:'cloth', weather:'rainy',  cost:620, tag:'雨天用', effect:{mood:8},
     use:['雨下大了，小蛙撑开你准备的小雨伞，听雨点打在伞面上。',
          '小蛙在伞下躲雨，看水洼里自己的倒影，觉得有点好笑。'] },
-  { id:'windcoat', name:'风衣',   icon:'🧥', type:'cloth', weather:'windy',  cost:650, tag:'风天穿',
+  { id:'windcoat', name:'风衣',   icon:'🧥', type:'cloth', weather:'windy',  cost:650, tag:'风天穿', effect:{mood:5},
     use:['风很大，小蛙裹紧你准备的风衣，衣角被吹得哗哗响。',
          '小蛙迎着风走，风衣鼓起来像一对翅膀。'] },
-  { id:'lantern',  name:'小灯笼', icon:'🏮', type:'cloth', weather:'foggy',  cost:750, tag:'雾天用',
+  { id:'lantern',  name:'小灯笼', icon:'🏮', type:'cloth', weather:'foggy',  cost:750, tag:'雾天用', effect:{mood:10},
     use:['雾很浓，小蛙点起你准备的小灯笼，光晕在雾里慢慢散开。',
          '小蛙提着灯笼走，雾里好像有别的影子跟着。'] },
-  { id:'scarf',    name:'围巾',   icon:'🧣', type:'cloth', weather:'snowy',  cost:680, tag:'雪天戴',
+  { id:'scarf',    name:'围巾',   icon:'🧣', type:'cloth', weather:'snowy',  cost:680, tag:'雪天戴', effect:{mood:8},
     use:['小蛙围上你准备的围巾，雪落在绒毛上，一会儿就化了。',
          '小蛙把脸埋进围巾里，呼出的气变成一小团白雾。'] },
-  { id:'starjar',  name:'星愿瓶', icon:'🫙', type:'cloth', weather:'starry', cost:900, tag:'星夜用',
+  { id:'starjar',  name:'星愿瓶', icon:'🫙', type:'cloth', weather:'starry', cost:900, tag:'星夜用', effect:{mood:12},
     use:['夜里，小蛙打开你准备的星愿瓶，里面的光点飘出来，和星星混在一起。',
          '小蛙对着星愿瓶许了个愿，然后把盖子轻轻拧上。'] },
-  { id:'candy',   name:'糖果',   icon:'🍬', type:'gift', cost:300, tag:'送朋友',
+  { id:'candy',   name:'糖果',   icon:'🍬', type:'gift', cost:300, tag:'送朋友', effect:{mood:6},
     use:['小蛙把糖果分给路边的麻雀，它们叽叽喳喳地道谢。',
          '小蛙给了哭鼻子的小蚂蚁一颗糖，它终于笑了。'] },
-  { id:'flower',  name:'小花束', icon:'💐', type:'gift', cost:500, tag:'送朋友',
+  { id:'flower',  name:'小花束', icon:'💐', type:'gift', cost:500, tag:'送朋友', effect:{mood:8},
     use:['小蛙遇到一只迷路的刺猬，把小花束送给了它。',
          '小蛙把花送给路边卖唱的小鸟，它唱得更起劲了。'] },
-  { id:'shell',   name:'贝壳',   icon:'🐚', type:'gift', cost:700, tag:'送朋友',
+  { id:'shell',   name:'贝壳',   icon:'🐚', type:'gift', cost:700, tag:'送朋友', effect:{mood:8},
     use:['小蛙把贝壳送给海边捡垃圾的小螃蟹。',
          '小蛙遇到一只喜欢收集东西的乌鸦，用贝壳换了一颗玻璃珠。'] },
-  { id:'feather', name:'羽毛笔', icon:'🪶', type:'gift', cost:850, tag:'送朋友',
+  { id:'feather', name:'羽毛笔', icon:'🪶', type:'gift', cost:850, tag:'送朋友', effect:{mood:10},
     use:['小蛙把羽毛笔送给邮局的老爷爷，他写了一辈子信。',
          '小蛙把羽毛笔送给一个在路边写生的小女孩。'] },
 ];
@@ -441,11 +442,17 @@ const AUTO_FEEDER_RATE = 0.03;
 const AUTO_FEEDER_FOOD = 0.45;
 const FOOD_TICK = 0.25;
 
-const TRIP_FOOD_TICK   = 0.15;
-const TRIP_MOOD_TICK   = 0.02;
+/* 旅行相关阈值 */
+const TRIP_FOOD_TICK   = 0.04;   // 旅行途中每秒饱食度下降
+const TRIP_MOOD_TICK   = 0.012;  // 旅行途中每秒心情下降
 const TRIP_NEED_MOOD   = 40;
 const TRIP_NEED_FOOD   = 30;
 
+/* 小蛙在路上自己找吃的 */
+const FORAGE_MIN = 150;   // 最短间隔（秒）
+const FORAGE_MAX = 300;   // 最长间隔（秒）
+
+/* 恢复期 */
 const RECOVER_TIME       = 150;
 const RECOVER_MOOD_RATE  = 0.22;
 const RECOVER_FOOD_RATE  = 0.14;
@@ -456,8 +463,7 @@ const HOME_RECOVER_FOOD = 0.05;
 const MAX_TICK = 3600;
 
 /* ============================================================
-   地点 / 事件
-   明信片文案全部改用蛙蛙的第一人称「我」
+   地点 / 明信片文案
 ============================================================ */
 const PLACES = [
   { name:'青苔石阶',   emoji:'🪨', lines:[
@@ -537,6 +543,16 @@ const TRIP_EVENTS = [
   '小蛙在一扇门前站了很久，最后没有敲。',
 ];
 
+/* 小蛙自己在路上找吃的 */
+const FORAGE_EVENTS = [
+  { text:'小蛙在路边摘了几颗野果，垫了垫肚子。', food:6 },
+  { text:'小蛙在溪边喝了点水，又抓了两只小虫。', food:5 },
+  { text:'小蛙在一棵树下捡到掉下来的果子。',     food:8 },
+  { text:'小蛙路过一片草地，找到几粒饱满的种子。', food:5 },
+  { text:'小蛙在一户人家门口蹭到一小块饼。',     food:10, mood:2 },
+  { text:'小蛙在田埂上找到一根甜甜的草茎。',     food:4,  mood:1 },
+];
+
 const HOME_EVENTS = [
   { text:'一只蜗牛来敲门，留下一小袋三叶草就走了。', clover:r => r*15 + 5, mood:3 },
   { text:'蝴蝶从窗口飞进来，绕了两圈又飞出去。',     mood:6 },
@@ -577,7 +593,8 @@ function defaultState(){
       home:true, remain:0, duration:0, place:null, events:[],
       autoTimer:60, eventTimer:0, bag:[],
       pose:'nap', poseTimer:60,
-      recovering:false, recoverTimer:0
+      recovering:false, recoverTimer:0,
+      forageTimer:0
     },
     stats: { trips:0, events:0, fed:0 },
     lastSave: Date.now()
@@ -702,6 +719,9 @@ function nextTripEventDelay(){
 function rollTripDuration(){
   return rnd(600, 7200);
 }
+function nextForageDelay(){
+  return rnd(FORAGE_MIN, FORAGE_MAX);
+}
 
 function startTrip(){
   const f = state.frog;
@@ -719,6 +739,7 @@ function startTrip(){
   f.bag = state.bag.slice();
   f.recovering = false;
   f.recoverTimer = 0;
+  f.forageTimer = nextForageDelay();
   state.bag = [];
 
   addLog(`小蛙背上行囊，往「${place.name}」去了。`, 'info');
@@ -727,6 +748,7 @@ function startTrip(){
   }
 }
 
+/* 旅行中使用行囊物品：真的回复数值 */
 function tripEvent(){
   const f = state.frog;
   if(!f.bag || !f.bag.length){
@@ -738,19 +760,68 @@ function tripEvent(){
 
   const w = state.weather;
   const bag = f.bag;
+  const fMax = foodMax();
+
+  /* 根据当前状态调整各类物品的权重：
+     - 天气匹配的衣物优先
+     - 饿了的时候食物权重更高
+     - 心情低了礼物权重更高 */
+  const needFood = state.food < fMax * 0.55;
+  const needMood = state.mood < 55;
+
   const pool = [];
   for(const it of bag){
-    if(it.type === 'cloth' && it.weather === w){ pool.push(it, it, it); }
-    else if(it.type === 'food'){ pool.push(it, it); }
-    else if(it.type === 'gift'){ pool.push(it); }
-    else { pool.push(it); }
+    if(it.type === 'cloth' && it.weather === w){
+      pool.push(it, it, it);
+    } else if(it.type === 'food'){
+      if(needFood) pool.push(it, it, it, it, it);
+      else pool.push(it, it);
+    } else if(it.type === 'gift'){
+      if(needMood) pool.push(it, it);
+      else pool.push(it);
+    } else {
+      pool.push(it);
+    }
   }
+
   const item = pick(pool);
   const idx = bag.indexOf(item);
   if(idx >= 0) bag.splice(idx, 1);
 
   const text = pick(item.use);
-  addLog('旅途中：' + text, 'good');
+  let msg = '旅途中：' + text;
+
+  const parts = [];
+  if(item.effect){
+    if(item.effect.food){
+      const gain = Math.round(item.effect.food * foodMul());
+      state.food = clamp(state.food + item.effect.food * foodMul(), 0, fMax);
+      parts.push('+' + gain + ' 饱食');
+    }
+    if(item.effect.mood){
+      state.mood = clamp(state.mood + item.effect.mood, 0, 100);
+      parts.push('+' + item.effect.mood + ' 心情');
+    }
+  }
+  if(parts.length) msg += '（' + parts.join('，') + '）';
+  addLog(msg, 'good');
+}
+
+/* 小蛙自己找吃的 */
+function forageEvent(){
+  const e = pick(FORAGE_EVENTS);
+  let gain = e.food;
+
+  /* 心情低落时，找吃的也会不顺利 */
+  if(state.mood < 30)      gain = Math.max(1, Math.floor(gain * 0.3));
+  else if(state.mood < 50) gain = Math.max(2, Math.floor(gain * 0.6));
+
+  state.food = clamp(state.food + gain, 0, foodMax());
+  if(e.mood) state.mood = clamp(state.mood + e.mood, 0, 100);
+
+  const parts = ['+' + gain + ' 饱食'];
+  if(e.mood) parts.push('+' + e.mood + ' 心情');
+  addLog('旅途中：' + e.text + '（' + parts.join('，') + '）', 'info');
 }
 
 function endTrip(interrupted){
@@ -775,7 +846,11 @@ function endTrip(interrupted){
   state.totalClovers += reward;
 
   if(interrupted){
-    addLog(`小蛙玩够了，从「${place.name}」提前回来了。它想在家歇一会儿。`, 'info');
+    let reason;
+    if(state.food <= 0.5)         reason = '小蛙肚子饿了';
+    else if(state.mood <= 0.5)    reason = '小蛙有点累了';
+    else                          reason = '小蛙玩够了';
+    addLog(`小蛙从「${place.name}」提前回来了。${reason}，想在家歇一会儿。`, 'info');
     state.mood = clamp(state.mood + 3, 0, 100);
     f.recovering = true;
     f.recoverTimer = RECOVER_TIME;
@@ -801,6 +876,7 @@ function endTrip(interrupted){
   f.bag = [];
   f.autoTimer = rnd(180, 360);
   f.poseTimer = rnd(3, 12);
+  f.forageTimer = 0;
 }
 
 function makePostcard(){
@@ -912,12 +988,21 @@ function tick(dt){
       }
     }
   } else {
+    /* 旅行途中：饱食度和心情缓慢变化 */
     state.food = Math.max(0, state.food - TRIP_FOOD_TICK * dt);
 
     let tripMoodTick = -TRIP_MOOD_TICK;
     if(w.moodTick > 0) tripMoodTick = w.moodTick * 0.3;
     state.mood = clamp(state.mood + tripMoodTick * dt, 0, 100);
 
+    /* 小蛙自己找吃的：每隔一段时间补充一点 */
+    f.forageTimer -= dt;
+    if(f.forageTimer <= 0){
+      f.forageTimer = nextForageDelay();
+      forageEvent();
+    }
+
+    /* 兜底：真的归零了才提前回家 */
     if(state.mood <= 0 || state.food <= 0){
       endTrip(true);
     }
@@ -1017,16 +1102,22 @@ function eat(foodId){
   addLog(msg, 'good');
 }
 
+/* 把行囊物品的 effect 一并带上 */
+function makeBagItem(item){
+  return {
+    id: item.id, name: item.name, icon: item.icon,
+    type: item.type, weather: item.weather, use: item.use,
+    effect: item.effect
+  };
+}
+
 function buyItem(id){
   const item = ITEMS.find(i => i.id === id);
   if(!item) return;
   if(state.bag.length >= BAG_CAP) return;
   if(state.clovers < item.cost) return;
   state.clovers -= item.cost;
-  state.bag.push({
-    id: item.id, name: item.name, icon: item.icon,
-    type: item.type, weather: item.weather, use: item.use
-  });
+  state.bag.push(makeBagItem(item));
   addLog(`你把${item.icon}${item.name}放进了行囊。`, 'info');
 }
 
@@ -1384,46 +1475,51 @@ function save(){
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e){}
 }
 
-/* 把旧版本的数据补齐到当前结构 */
+/* 给行囊物品补上 effect 字段（旧存档没这个字段） */
+function normalizeBagItem(item){
+  if(!item || !item.id) return item;
+  const def = ITEMS.find(i => i.id === item.id);
+  if(def && def.effect && !item.effect){
+    item.effect = def.effect;
+  }
+  return item;
+}
+
 function migrateSave(data){
   const from = Number(data.version) || 1;
 
-  /* v1 → v2：饱食度、自动喂食器 */
   if(from < 2){
     if(typeof data.food !== 'number') data.food = 100;
     if(typeof data.hasAutoFeeder !== 'boolean') data.hasAutoFeeder = false;
     if(typeof data.autoFeed !== 'boolean') data.autoFeed = false;
   }
-
-  /* v2 → v3：行囊、装备 */
   if(from < 3){
     if(!Array.isArray(data.bag)) data.bag = [];
     if(!data.gear) data.gear = { cloth:0, food:0, house:0, travel:0 };
   }
-
-  /* v3 → v4：姿态 */
   if(from < 4){
     if(!data.frog) data.frog = {};
     if(!data.frog.pose) data.frog.pose = 'nap';
     if(typeof data.frog.poseTimer !== 'number') data.frog.poseTimer = 60;
     if(!Array.isArray(data.frog.bag)) data.frog.bag = [];
   }
-
-  /* v4 → v5：移除任务系统 */
   if(from < 5){
     delete data.task;
   }
-
-  /* v5 → v6：恢复期 */
   if(from < 6){
     if(!data.frog) data.frog = {};
     if(typeof data.frog.recovering !== 'boolean') data.frog.recovering = false;
     if(typeof data.frog.recoverTimer !== 'number') data.frog.recoverTimer = 0;
   }
-
-  /* v6 → v7：明信片文案更新，只是加版本号，结构不变 */
   if(from < 7){
-    /* nothing structural */
+    /* v6 → v7：明信片文案更新，结构不变 */
+  }
+  if(from < 8){
+    /* v7 → v8：行囊物品增加 effect，出行新增 forageTimer */
+    if(!data.frog) data.frog = {};
+    if(typeof data.frog.forageTimer !== 'number') data.frog.forageTimer = 0;
+    if(Array.isArray(data.bag)) data.bag.forEach(normalizeBagItem);
+    if(data.frog && Array.isArray(data.frog.bag)) data.frog.bag.forEach(normalizeBagItem);
   }
 
   data.version = SAVE_VERSION;
@@ -1432,7 +1528,6 @@ function migrateSave(data){
 
 function load(){
   try {
-    /* 先读当前 key，读不到再按顺序尝试旧 key */
     let raw = localStorage.getItem(SAVE_KEY);
     let fromKey = SAVE_KEY;
     if(!raw){
@@ -1462,7 +1557,10 @@ function load(){
       state.frog.poseTimer = 60;
     }
 
-    /* 从旧 key 迁移过来时，写回新 key，并清掉旧的 */
+    /* 兜底：再归一化一次行囊物品 */
+    state.bag.forEach(normalizeBagItem);
+    state.frog.bag.forEach(normalizeBagItem);
+
     if(fromKey !== SAVE_KEY){
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e){}
       try { localStorage.removeItem(fromKey); } catch(e){}
@@ -1511,6 +1609,14 @@ function applyOffline(){
   } else {
     f.remain -= capped;
     state.food = Math.max(0, state.food - TRIP_FOOD_TICK * capped);
+
+    /* 离线期间小蛙也会自己找吃的 */
+    const forageCount = Math.floor(capped / ((FORAGE_MIN + FORAGE_MAX) / 2));
+    for(let i = 0; i < forageCount && state.food < foodMax() * 0.7; i++){
+      const e = pick(FORAGE_EVENTS);
+      state.food = clamp(state.food + e.food, 0, foodMax());
+    }
+
     const w = WEATHERS[state.weather];
     let tripMoodTick = -TRIP_MOOD_TICK;
     if(w.moodTick > 0) tripMoodTick = w.moodTick * 0.3;
@@ -1595,7 +1701,6 @@ function init(){
   state.perSecond = computePerSecond();
   applyOffline();
 
-  /* 顶栏版本标记 */
   const verTag = $('#verTag');
   if(verTag){
     verTag.textContent = 'v' + SAVE_VERSION;
